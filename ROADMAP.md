@@ -6,7 +6,7 @@
 
 **Projet** : Chatbot agent de voyage avec LangGraph
 **Objectif** : Aider les utilisateurs à choisir des voyages et logements parmi une liste prédéfinie, en fonction de critères extraits de leurs messages.
-**Stack** : Python 3.11, LangChain, LangGraph, Gemini (Google AI Studio)
+**Stack** : Python 3.11, LangChain, LangGraph, Gemini Flash via OpenRouter
 
 ### 2. Architecture
 
@@ -33,26 +33,26 @@
 ### 3. Étapes d'implémentation
 
 #### Phase 1 : Setup projet
-- [ ] Initialiser le projet Python (pyproject.toml, dépendances)
-- [ ] Configurer .env pour les clés API (Gemini)
-- [ ] Configurer .gitignore
-- [ ] Créer le repo GitHub public
+- [x] Initialiser le projet Python (pyproject.toml, dépendances)
+- [x] Configurer .env pour les clés API (Gemini)
+- [x] Configurer .gitignore
+- [x] Créer le repo GitHub public
 
 #### Phase 2 : Données et modèles
-- [ ] Définir le TypedDict `Criteres` pour la sortie structurée
-- [ ] Définir le TypedDict `AgentState` pour le state LangGraph
-- [ ] Stocker les données des voyages en JSON
+- [x] Définir le TypedDict `Criteres` pour la sortie structurée
+- [x] Définir le TypedDict `AgentState` pour le state LangGraph
+- [x] Stocker les données des voyages en JSON
 
 #### Phase 3 : Agent LangGraph
-- [ ] Node `extract_criteria` : extraction des critères via structured output LLM
-- [ ] Node `respond` : matching des voyages + génération de la réponse
-- [ ] Routing conditionnel (critères remplis ou non)
-- [ ] Compilation du graph
+- [x] Node `extract_criteria` : extraction des critères via structured output LLM
+- [x] Node `respond` : matching des voyages + génération de la réponse
+- [x] Routing conditionnel (critères remplis ou non)
+- [x] Compilation du graph
 
 #### Phase 4 : Configuration & Déploiement
-- [ ] Fichier `langgraph.json` pour `langgraph dev`
-- [ ] Tests manuels avec exemples de conversations
-- [ ] Déploiement sur Render (optionnel)
+- [x] Fichier `langgraph.json` pour `langgraph dev`
+- [x] Tests manuels avec exemples de conversations
+- [x] Déploiement sur Render (optionnel)
 
 ### 4. Critères utilisateur
 
