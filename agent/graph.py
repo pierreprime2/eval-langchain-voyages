@@ -5,7 +5,8 @@ load_dotenv()
 from typing import Optional
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+import os
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from agent.state import AgentState, Criteres
@@ -25,7 +26,11 @@ class CriteresExtracted(BaseModel):
 
 # --- LLM ---
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+llm = ChatOpenAI(
+    model="google/gemini-2.0-flash-001",
+    openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+    openai_api_base="https://openrouter.ai/api/v1",
+)
 
 
 # --- Nodes ---
