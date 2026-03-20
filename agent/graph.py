@@ -35,6 +35,38 @@ llm = ChatOpenAI(
 
 # --- Nodes ---
 
+VALID_CRITERIA_KEYS = {"plage", "montagne", "ville", "sport", "detente", "acces_handicap"}
+
+
+def validate_input(state: AgentState) -> dict:
+    """Valide les entrées utilisateur et nettoie le state."""
+    user_message = state.get("user_message", "")
+    criteres = state.get("criteres", {})
+
+    # Cas 1 : message vide ou uniquement des espaces
+    if not user_message or not user_message.strip():
+        return {
+            "user_message": "",
+            "criteres": criteres,
+            "ai_message": "Votre message est vide. Pourriez-vous me décrire le type de vacances que vous recherchez ? "
+                          "Par exemple : plage, montagne, ville, sport, détente, ou accessibilité handicap.",
+        }
+
+    # Cas 2 : critères invalides (clés inconnues ou valeurs non booléennes)
+    cleaned_criteres = {}
+    for key, value in criteres.items():
+        if key not in VALID_CRITERIA_KEYS:
+            continue
+        if not isinstance(value, bool):
+            continue
+        cleaned_criteres[key] = value
+
+    return {
+        "user_message": user_message.strip(),
+        "criteres": cleaned_criteres,
+    }
+
+
 def extract_criteria(state: AgentState) -> dict:
     """Extrait les critères de voyage du message utilisateur via structured output."""
     user_message = state["user_message"]
@@ -172,14 +204,23 @@ def find_matching_voyages(criteres: dict) -> list:
 
 # --- Graph ---
 
+def route_after_validation(state: AgentState) -> str:
+    """Si le message est vide, on a déjà une réponse d'erreur : aller directement à END."""
+    if not state.get("user_message"):
+        return END
+    return "extract_criteria"
+
+
 def create_graph():
     """Crée et compile le graph LangGraph."""
     workflow = StateGraph(AgentState)
 
+    workflow.add_node("validate_input", validate_input)
     workflow.add_node("extract_criteria", extract_criteria)
     workflow.add_node("respond", respond)
 
-    workflow.set_entry_point("extract_criteria")
+    workflow.set_entry_point("validate_input")
+    workflow.add_conditional_edges("validate_input", route_after_validation)
     workflow.add_edge("extract_criteria", "respond")
     workflow.add_edge("respond", END)
 
