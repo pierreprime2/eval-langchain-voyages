@@ -1,0 +1,16 @@
+[project]
+name = "eval-langchain-voyages"
+version = "0.1.0"
+description = "Chatbot agent de voyage avec LangGraph"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2",
+    "langchain>=0.3",
+    "langchain-google-genai>=2",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "langsmith>=0.1",
+]
