@@ -56,19 +56,23 @@ Pour chaque critère :
 
 Important : ne mets un critère à true/false que s'il est explicitement mentionné ou clairement impliqué par le message."""
 
-    structured_llm = llm.with_structured_output(CriteresExtracted)
-    result = structured_llm.invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_message),
-    ])
+    try:
+        structured_llm = llm.with_structured_output(CriteresExtracted)
+        result = structured_llm.invoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_message),
+        ])
 
-    # Fusionner les nouveaux critères avec les existants
-    new_criteres = dict(existing_criteres)
-    for key, value in result.model_dump().items():
-        if value is not None:
-            new_criteres[key] = value
+        # Fusionner les nouveaux critères avec les existants
+        new_criteres = dict(existing_criteres)
+        for key, value in result.model_dump().items():
+            if value is not None:
+                new_criteres[key] = value
 
-    return {"criteres": new_criteres}
+        return {"criteres": new_criteres}
+    except Exception:
+        # En cas d'erreur LLM, on conserve les critères existants
+        return {"criteres": existing_criteres}
 
 
 def respond(state: AgentState) -> dict:
@@ -79,31 +83,32 @@ def respond(state: AgentState) -> dict:
     # Vérifier si au moins un critère est rempli (True)
     filled_criteria = {k: v for k, v in criteres.items() if v is True}
 
-    if not filled_criteria:
-        # Aucun critère positif => demander des précisions
-        response = llm.invoke([
-            SystemMessage(content="""Tu es un agent de voyage chaleureux et professionnel.
+    try:
+        if not filled_criteria:
+            # Aucun critère positif => demander des précisions
+            response = llm.invoke([
+                SystemMessage(content="""Tu es un agent de voyage chaleureux et professionnel.
 L'utilisateur n'a pas encore exprimé de préférence claire pour un type de voyage.
 Demande-lui ses préférences parmi ces critères : plage, montagne, ville, sport, détente, accessibilité handicap.
 Sois naturel et engageant. Si le message est incompréhensible, indique que tu n'as pas compris mais propose quand même ton aide."""),
-            HumanMessage(content=user_message),
-        ])
-        return {"ai_message": response.content}
+                HumanMessage(content=user_message),
+            ])
+            return {"ai_message": response.content}
 
-    # Matcher les voyages
-    matching_voyages = find_matching_voyages(criteres)
+        # Matcher les voyages
+        matching_voyages = find_matching_voyages(criteres)
 
-    # Construire le contexte pour la réponse
-    criteres_summary = ", ".join(
-        f"{k}={'oui' if v else 'non'}" for k, v in criteres.items() if v is not None
-    )
-    voyages_text = "\n".join(
-        f"- {v['nom']} (labels: {', '.join(v['labels'])}, accessible: {v['accessibleHandicap']})"
-        for v in matching_voyages
-    ) if matching_voyages else "Aucun voyage ne correspond exactement à vos critères."
+        # Construire le contexte pour la réponse
+        criteres_summary = ", ".join(
+            f"{k}={'oui' if v else 'non'}" for k, v in criteres.items() if v is not None
+        )
+        voyages_text = "\n".join(
+            f"- {v['nom']} (labels: {', '.join(v['labels'])}, accessible: {v['accessibleHandicap']})"
+            for v in matching_voyages
+        ) if matching_voyages else "Aucun voyage ne correspond exactement à vos critères."
 
-    response = llm.invoke([
-        SystemMessage(content=f"""Tu es un agent de voyage chaleureux et professionnel.
+        response = llm.invoke([
+            SystemMessage(content=f"""Tu es un agent de voyage chaleureux et professionnel.
 Les critères de l'utilisateur sont : {criteres_summary}
 
 Voici les voyages correspondants :
@@ -113,10 +118,12 @@ Propose le ou les voyages correspondants à l'utilisateur.
 Explique pourquoi ils correspondent à ses critères.
 Propose-lui de préciser sa demande pour affiner les résultats.
 Si aucun voyage ne correspond, dis-le et propose des alternatives."""),
-        HumanMessage(content=user_message),
-    ])
+            HumanMessage(content=user_message),
+        ])
 
-    return {"ai_message": response.content}
+        return {"ai_message": response.content}
+    except Exception:
+        return {"ai_message": "Désolé, une erreur technique est survenue. Veuillez réessayer dans quelques instants."}
 
 
 def find_matching_voyages(criteres: dict) -> list:
